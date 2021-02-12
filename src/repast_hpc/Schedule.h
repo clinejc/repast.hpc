@@ -301,6 +301,25 @@ public:
 		return schedule_.getCurrentTick();
 	}
 
+ 	/**
+	 * Executes the next event. The function adds support to interactive
+	 * execution of a simulation.
+	 * <br>
+	 * 2014-02-05 added by jcline@mitre.org
+	 */
+	void execNextEvent();
+
+	/**
+	 * Gets whether the simulation is currently running.
+	 * <br>
+	 * 2014-02-05 added by jcline@mitre.org
+	 *
+	 * @return whether the simulation is currently running
+	 */
+	bool isRunning() {
+	  return go;
+	}
+ 
 	/**
 	 * Stops the simulation.
 	 */
@@ -314,6 +333,20 @@ public:
 	const Schedule& schedule() {
 		return schedule_;
 	}
+  
+  	/**
+	 * Initializes the simulation schedule.
+	 * <br>
+	 * 2014-09-26 added by jcline@mitre.org
+	 */
+	void init();
+  
+  	/**
+	 * Ends the simulation.
+	 * <br>
+	 * 2019-02-09 added by jcline@mitre.org
+	 */
+	void end();
 };
 
 }

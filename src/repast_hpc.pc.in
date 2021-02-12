@@ -1,0 +1,10 @@
+prefix=@DEST_DIR@
+exec_prefix=@exec_prefix@
+libdir=${exec_prefix}/lib
+includedir=${exec_prefix}/include
+
+Name: Repast HPC
+Description:
+Version: @version@
+Libs: -L${libdir} -lrepast_hpc-@version@ -lrelogo-@version@
+Cflags: -I${includedir}

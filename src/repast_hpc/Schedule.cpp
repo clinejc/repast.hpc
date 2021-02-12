@@ -179,20 +179,34 @@ void ScheduleRunner::scheduleEndEvent(Schedule::FunctorPtr func) {
 	endEvents.push_back(func);
 }
 
+void ScheduleRunner::execNextEvent() {
+        all_reduce(*comm, localNextTick, globalNextTick, boost::mpi::minimum<double>());
+        if (localNextTick == globalNextTick)
+                schedule_.execute();
+        nextTick();
+}
+
 void ScheduleRunner::run() {
 	//Timer timer;
 	while (go) {
-		//timer.start();
-		all_reduce(*comm, localNextTick, globalNextTick, boost::mpi::minimum<double>());//&localNextTick, &globalNextTick, 1, MPI::DOUBLE, MPI::MIN);
-		//Log4CL::instance()->get_logger("root").log(INFO, "schedule idle, time: " + boost::lexical_cast<std::string>(timer.stop()));
-		if (localNextTick == globalNextTick)
-			schedule_.execute();
-		nextTick();
+                execNextEvent();
 	}
+	// execute end events
+	// for (size_t i = 0; i < endEvents.size(); i++) {
+	// 	(*endEvents[i])();
+	// }
+	end();
+}
+
+void ScheduleRunner::init() {
+	go = true;                    // reset go
+	schedule_ = Schedule();       // Create a new schedule
+}
+
+void ScheduleRunner::end() {
 	// execute end events
 	for (size_t i = 0; i < endEvents.size(); i++) {
 		(*endEvents[i])();
 	}
 }
-
 }

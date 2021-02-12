@@ -66,7 +66,10 @@ void ZombieObserver::go() {
   if (_rank == 0) {
     Log4CL::instance()->get_logger("root").log(INFO, "TICK BEGINS: " + boost::lexical_cast<string>(RepastProcess::instance()->getScheduleRunner().currentTick()));
   }
-  synchronize<AgentPackage>(*this, *this, *this, RepastProcess::USE_LAST_OR_USE_CURRENT);
+  // only synchronize if running on more than one processor!
+  if (RepastProcess::communicator()->size() > 1) {
+    synchronize<AgentPackage>(*this, *this, *this, RepastProcess::USE_LAST_OR_USE_CURRENT);
+  }
 
   AgentSet<Zombie> zombies;
   get(zombies);
