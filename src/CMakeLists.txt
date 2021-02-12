@@ -222,22 +222,22 @@ set (relogo_src
 )
 
 set (rumor_src
-	rumor/main.cpp
-	rumor/RumorModel.cpp
-	rumor/RumorModel.h
+	rumor_model/main.cpp
+	rumor_model/RumorModel.cpp
+	rumor_model/RumorModel.h
 )
 
 set (zombie_src
-	zombie/AgentPackage.h
-	zombie/Human.cpp
-	zombie/Human.h
-	zombie/InfectionSum.cpp
-	zombie/InfectionSum.h
-	zombie/main.cpp
-	zombie/Zombie.cpp
-	zombie/Zombie.h
-	zombie/ZombieObserver.cpp
-	zombie/ZombieObserver.h
+	zombies/AgentPackage.h
+	zombies/Human.cpp
+	zombies/Human.h
+	zombies/InfectionSum.cpp
+	zombies/InfectionSum.h
+	zombies/main.cpp
+	zombies/Zombie.cpp
+	zombies/Zombie.h
+	zombies/ZombieObserver.cpp
+	zombies/ZombieObserver.h
 )
 
 set (version 2.3.0)
@@ -272,7 +272,7 @@ target_link_libraries(${relogo_lib_name} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} 
 set (rumor_exec rumor_model)
 add_executable(${rumor_exec} ${rumor_src})
 set_target_properties(${rumor_exec} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ./bin/rumor)
-file (COPY ../src/rumor/config.props ../src/rumor/model.props DESTINATION ./bin/rumor) 
+file (COPY ../src/rumor_model/config.props ../src/rumor_model/model.props DESTINATION ./bin/rumor) 
 target_include_directories(${rumor_exec} PUBLIC .)
 add_dependencies(${rumor_exec} ${rhpc_lib_name})
 target_link_libraries(${rumor_exec} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} ${CURL_LIBRARIES} ${MPI_LIBRARIES} ${rhpc_lib_name})
@@ -280,7 +280,7 @@ target_link_libraries(${rumor_exec} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} ${CUR
 set (zombie_exec zombie_model)
 add_executable(${zombie_exec} ${zombie_src})
 set_target_properties( ${zombie_exec} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ./bin/zombies)
-file (COPY ../src/zombie/config.props ../src/zombie/model.props ../src/zombie/model-1cpu.props DESTINATION ./bin/zombies) 
+file (COPY ../src/zombies/config.props ../src/zombies/model.props ../src/zombies/model-1cpu.props DESTINATION ./bin/zombies) 
 target_include_directories(${zombie_exec} PUBLIC .)
 add_dependencies(${zombie_exec} ${rhpc_lib_name} ${relogo_lib_name})
 target_link_libraries(${zombie_exec} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} ${CURL_LIBRARIES} ${MPI_LIBRARIES} ${rhpc_lib_name} ${relogo_lib_name})
