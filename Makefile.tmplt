@@ -112,6 +112,8 @@ LIB_EXT =
 OS := $(shell uname)
 
 ifeq ($(OS),Darwin)
+ CXX_FLAGS = -Xpreprocessor -fopenmp $(CXX_DEBUG_FLAGS)
+ LDFLAGS = -Xpreprocessor -fopenmp
  LIB_LDFLAGS += -dynamiclib
  LIB_EXT = dylib
 else
