@@ -150,6 +150,8 @@ set(rhpc_src
 	repast_hpc/Utilities.h
 	repast_hpc/ValueLayer.cpp
 	repast_hpc/ValueLayer.h
+	repast_hpc/ValueLayerND.cpp
+	repast_hpc/ValueLayerND.h
 	repast_hpc/Variable.cpp
 	repast_hpc/Variable.h
 	repast_hpc/Vertex.h
