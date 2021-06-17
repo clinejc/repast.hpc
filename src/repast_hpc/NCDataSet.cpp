@@ -55,6 +55,8 @@ namespace repast {
 
 NCDataSet::NCDataSet(std::string file, const Schedule& schedule) :
 	schedule_(&schedule), start(0), open(true) {
+  startp.push_back(start); // set start for time dimension (jcline 2012-08-11)
+  countp.push_back(1); // set count for time dimension (jcline 2012-08-11)
   std::string filename = file;
 	rank = RepastProcess::instance()->rank();
 	if (rank == 0) {
@@ -109,9 +111,18 @@ void NCDataSet::write() {
 	//Timer timer;
 	//timer.start();
 	if (rank == 0) {
-		NcVar* tickVar = ncfile->get_var("tick");
-		tickVar->set_cur(start);
-		tickVar->put(&ticks[0], ticks.size());
+		//NcVar* tickVar = ncfile->get_var("tick");
+		try { // add exception handling for new api (jcline 2012-07-27)
+			NcVar tickVar = ncfile->getVar("tick");
+			//tickVar->set_cur(start);
+			//tickVar->put(&ticks[0], ticks.size());
+			startp[0] = start;
+			countp[0] = ticks.size();
+			tickVar.putVar(startp, countp, &ticks[0]);
+		}
+		catch(exceptions::NcException& e) {
+			e.what();
+		}
 		start += ticks.size();
 
 		ticks.clear();
@@ -119,10 +130,17 @@ void NCDataSet::write() {
 
 	for (size_t i = 0; i < dataSources.size(); i++) {
 		NCDataSource * ds = dataSources[i];
-		NcVar* var = 0;
-		if (rank == 0)
-			var = ncfile->get_var(ds->name().c_str());
-		ds->write(var);
+		//NcVar* var = 0;
+		if (rank == 0) {
+			//var = ncfile->get_var(ds->name().c_str());
+			try {
+				NcVar var = ncfile->getVar(ds->name().c_str());
+				ds->write(&var);
+			}
+			catch(exceptions::NcException& e) {
+				e.what();
+			}
+		}
 	}
 
 	//Log4CL::instance()->get_logger("root").log(INFO, "dataset write, time: " + boost::lexical_cast<std::string>(timer.stop()));

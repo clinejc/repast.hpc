@@ -105,6 +105,7 @@ set(rhpc_src
 	repast_hpc/NCDataSet.h
 	repast_hpc/NCDataSetBuilder.cpp
 	repast_hpc/NCDataSetBuilder.h
+	repast_hpc/NCDataSource.cpp
 	repast_hpc/NCDataSource.h
 	repast_hpc/NCReducibleDataSource.h
 	repast_hpc/NetworkBuilder.cpp
@@ -270,9 +271,13 @@ find_package(Boost 1.54.0 REQUIRED COMPONENTS system filesystem mpi serializatio
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIB_DIR})
 
+# Find netCDF
+include (FindNetCDF)
+
 set (NETCDF_CXX "YES")
 find_package(NetCDF REQUIRED)
-include_directories(${NETCDF_INCLUDES})
+include_directories(${NETCDF_INCLUDE_DIR})
+#set (NETCDF_LIBRARIES "${NETCDF_CXX_LIBRARY} ${NETCDF_LIBRARY}") 
 
 find_package(CURL REQUIRED)
 

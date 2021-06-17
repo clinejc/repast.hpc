@@ -43,7 +43,7 @@
 
 #include <vector>
 #include <boost/mpi.hpp>
-#include <netcdfcpp.h>
+#include <netcdf>
 
 #include "Schedule.h"
 #include "RepastProcess.h"
@@ -71,6 +71,7 @@ private:
 	std::string file_;
 	const Schedule* schedule_;
 	int rank, start;
+	std::vector<size_t> startp, countp;
 	bool open;
 
 	NcFile* ncfile;

@@ -44,8 +44,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
-#include <limits.h>
-#include <math.h>
+#include <cfloat>
 
 using namespace std;
 

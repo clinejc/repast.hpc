@@ -47,7 +47,7 @@
 
 #include <boost/mpi.hpp>
 #include <vector>
-#include <netcdfcpp.h>
+#include <netcdf>
 
 namespace repast {
 
@@ -63,6 +63,7 @@ protected:
 	std::vector<T> data;
 	TDataSource<T>* dataSource_;
 	int rank, start;
+    std::vector<size_t> startp, countp;
 
 public:
 	NCReducibleDataSource(std::string name, TDataSource<T>* dataSource, Op op);
@@ -78,6 +79,8 @@ public:
 template<typename Op, typename T>
 NCReducibleDataSource<Op, T>::NCReducibleDataSource(std::string name, TDataSource<T>* dataSource, Op op) : NCDataSource(name), op_(op),
 dataSource_(dataSource), start(0) {
+  startp.push_back(start); startp.push_back(0); // set start for both dimension (jcline 2012-08-11)
+  countp.push_back(1); countp.push_back(1); // set count for both dimensions (jcline 2012-08-11)
 	rank = RepastProcess::instance()->rank();
 };
 
@@ -103,11 +106,19 @@ void NCReducibleDataSource<Op, T>::write(NcVar* var) {
 		T* results = new T[size];
 		reduce(*comm, &data[0], size, results, op_, 0);
 
-		var->set_cur(start, 0);
+		//var->set_cur(start, 0);
 		// writing results along the tick dimension
 		// and run dimension -- each result is indexed by the
 		// the tick values of the tick dimension and the single run dimension
-		var->put(results, size, 1);
+		//var->put(results, size, 1);
+		startp[0] = start;
+		countp[0] = size;
+		try {
+			var->putVar(startp, countp, results);
+		}
+		catch(exceptions::NcException e) {
+			e.what();
+		}
 		start += size;
 
 		delete[] results;

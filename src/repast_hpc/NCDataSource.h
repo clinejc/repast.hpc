@@ -41,6 +41,10 @@
 #ifndef NCDATASOURCE_H_
 #define NCDATASOURCE_H_
 
+#include <netcdf>
+
+using namespace netCDF;
+
 namespace repast {
 
 /**
@@ -75,18 +79,18 @@ struct NcTypeTrait;
  */
 template<>
 struct NcTypeTrait<double> {
-	const static NcType type = ncDouble;
+        const static NcType type;
 };
+//const NcType NcTypeTrait<double>::type = ncDouble;
 
 /**
  * Used for converting to NetCDF Data, int type
  */
 template<>
 struct NcTypeTrait<int> {
-	const static NcType type = ncInt;
+        const static NcType type;
 };
-
-
+//const NcType NcTypeTrait<int>::type = ncInt
 
 }
 

@@ -60,17 +60,26 @@ NCDataSet* NCDataSetBuilder::createDataSet() {
 	returned = true;
 	if (RepastProcess::instance()->rank() == 0) {
 
-		NcFile* ncfile = new NcFile(dataSet->file_.c_str(), NcFile::Replace, NULL, 0, NcFile::Offset64Bits);
-		NcDim* runDim = ncfile->add_dim("run", 1);
-		NcDim* tickDim = ncfile->add_dim("tick");
+          try {
+            //NcFile* ncfile = new NcFile(dataSet->file_.c_str(), NcFile::Replace, NULL, 0, NcFile::Offset64Bits);
+            NcFile* ncfile = new NcFile(dataSet->file_, NcFile::replace, NcFile::nc4);
+			NcDim runDim = ncfile->addDim("run", 1);
+			NcDim tickDim = ncfile->addDim("tick");
 
-		ncfile->add_var("tick", ncDouble, tickDim);
+			ncfile->addVar("tick", ncDouble, tickDim);
 
-		for (size_t i = 0; i < dataSet->dataSources.size(); i++) {
-			NCDataSource* ds = dataSet->dataSources[i];
-			ncfile->add_var(ds->name().c_str(), ds->ncType(), tickDim, runDim);
-		}
-		dataSet->ncfile = ncfile;
+			std::vector<NcDim> dimVector;
+			dimVector.push_back(tickDim);
+			dimVector.push_back(runDim);
+			for (size_t i = 0; i < dataSet->dataSources.size(); i++) {
+					NCDataSource* ds = dataSet->dataSources[i];
+					ncfile->addVar(ds->name(), ds->ncType(), dimVector);
+			}
+			dataSet->ncfile = ncfile;
+          }
+          catch(exceptions::NcException& e) {
+            e.what();
+          }
 	}
 
 	return dataSet;
