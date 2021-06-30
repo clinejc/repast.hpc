@@ -1,6 +1,11 @@
-project(repast_hpc_project)
-
 cmake_minimum_required(VERSION 3.0)
+project(repast_hpc_project
+	VERSION 2.3.1
+)
+
+
+set (rhpc_lib_name repast_hpc)
+set (relogo_lib_name relogo)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/../cmake/Modules/")
 
@@ -263,46 +268,138 @@ set (relogo_ut_src
         ../test/relogo/ObserverTests.cpp
 )
 
-set (version 2.3.1)
-set (rhpc_lib_name repast_hpc)
-set (relogo_lib_name relogo)
+set(Boost_USE_MULTITHREADED ON)
+find_package(Boost 
+	1.61.0 
+	REQUIRED 
+	COMPONENTS 
+		system 
+		filesystem 
+		mpi 
+		serialization
+)
 
-find_package(Boost 1.54.0 REQUIRED COMPONENTS system filesystem mpi serialization)
-include_directories(${Boost_INCLUDE_DIR})
-link_directories(${Boost_LIB_DIR})
+if(NOT TARGET Boost::system)
+    add_library(Boost::system IMPORTED INTERFACE)
+    set_property(TARGET Boost::system PROPERTY
+        INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
+    set_property(TARGET Boost::system PROPERTY
+        INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
+endif()
+
+if(NOT TARGET Boost::filesystem)
+    add_library(Boost::filesystem IMPORTED INTERFACE)
+    set_property(TARGET Boost::filesystem PROPERTY
+        INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
+    set_property(TARGET Boost::filesystem PROPERTY
+        INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
+endif()
+
+if(NOT TARGET Boost::mpi)
+    add_library(Boost::mpi IMPORTED INTERFACE)
+    set_property(TARGET Boost::mpi PROPERTY
+        INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
+    set_property(TARGET Boost::mpi PROPERTY
+        INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
+endif()
+
+if(NOT TARGET Boost::serialization)
+    add_library(Boost::serialization IMPORTED INTERFACE)
+    set_property(TARGET Boost::serialization PROPERTY
+        INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
+    set_property(TARGET Boost::serialization PROPERTY
+        INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
+endif()
 
 # Find netCDF
 include (FindNetCDF)
 
 set (NETCDF_CXX "YES")
 find_package(NetCDF REQUIRED)
-include_directories(${NETCDF_INCLUDE_DIR})
-#set (NETCDF_LIBRARIES "${NETCDF_CXX_LIBRARY} ${NETCDF_LIBRARY}") 
+# include_directories(${NETCDF_INCLUDE_DIR})
 
 find_package(CURL REQUIRED)
 
 find_package(MPI REQUIRED)
 
+# For supporting CMake < 3.9:
+
+if(NOT TARGET MPI::MPI_CXX)
+    add_library(MPI::MPI_CXX IMPORTED INTERFACE)
+
+    set_property(TARGET MPI::MPI_CXX
+                 PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_CXX_COMPILE_FLAGS})
+    set_property(TARGET MPI::MPI_CXX
+                 PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_CXX_INCLUDE_PATH}")
+    set_property(TARGET MPI::MPI_CXX
+                 PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES})
+endif()
+
+message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
+
+
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS} -std=c++11")
 include_directories(${MPI_CXX_INCLUDE_PATH})
 
 add_library(${rhpc_lib_name} SHARED ${rhpc_src})
-set_target_properties(${rhpc_lib_name} PROPERTIES OUTPUT_NAME ${rhpc_lib_name}-${version})
-target_link_libraries(${rhpc_lib_name} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} ${CURL_LIBRARIES} ${MPI_LIBRARIES})
+set_target_properties(${rhpc_lib_name} PROPERTIES 
+	VERSION ${PROJECT_VERSION}
+	PUBLIC_HEADER "${rhpc_headers}"
+)
+target_link_libraries(${rhpc_lib_name} 
+	Boost::system 
+	Boost::filesystem 
+	Boost::mpi 
+	Boost::serialization 
+	${NETCDF_LIBRARIES} 
+	${CURL_LIBRARIES} 
+	MPI::MPI_CXX
+)
+target_include_directories(${rhpc_lib_name}
+	PRIVATE
+		${NETCDF_INCLUDE_DIRS}
+)
+
 
 add_library(${relogo_lib_name} SHARED ${relogo_src})
 target_include_directories(${relogo_lib_name} PUBLIC .)
-set_target_properties(${relogo_lib_name} PROPERTIES OUTPUT_NAME ${relogo_lib_name}-${version})
+set_target_properties(${relogo_lib_name} PROPERTIES 
+	OUTPUT_NAME "${relogo_lib_name}-${PROJECT_VERSION}"
+	PUBLIC_HEADER "${relogo_headers}"
+)
 add_dependencies(${relogo_lib_name} ${rhpc_lib_name})
-target_link_libraries(${relogo_lib_name} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} ${CURL_LIBRARIES} ${MPI_LIBRARIES} ${rhpc_lib_name})
+target_link_libraries(${relogo_lib_name} 
+	Boost::system 
+	Boost::filesystem 
+	Boost::mpi 
+	Boost::serialization 
+	${NETCDF_LIBRARIES} 
+	${CURL_LIBRARIES} 
+	MPI::MPI_CXX 
+	${rhpc_lib_name}
+)
 
 set (rumor_exec rumor_model)
 add_executable(${rumor_exec} ${rumor_src})
 set_target_properties(${rumor_exec} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ./bin/rumor)
 file (COPY ../src/rumor_model/config.props ../src/rumor_model/model.props DESTINATION ./bin/rumor) 
-target_include_directories(${rumor_exec} PUBLIC .)
+
 add_dependencies(${rumor_exec} ${rhpc_lib_name})
-target_link_libraries(${rumor_exec} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} ${CURL_LIBRARIES} ${MPI_LIBRARIES} ${rhpc_lib_name})
+target_link_libraries(${rumor_exec} 
+	${rhpc_lib_name}
+	Boost::system 
+	Boost::filesystem 
+	Boost::mpi 
+	Boost::serialization 
+	${NETCDF_LIBRARIES} 
+	${CURL_LIBRARIES} 
+	MPI::MPI_CXX 
+)
+target_include_directories(${rumor_exec}
+	PUBLIC 
+		.
+		${NETCDF_INCLUDE_DIRS}
+)
 
 set (zombie_exec zombie_model)
 add_executable(${zombie_exec} ${zombie_src})
@@ -310,7 +407,17 @@ set_target_properties( ${zombie_exec} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ./bin/
 file (COPY ../src/zombies/config.props ../src/zombies/model.props ../src/zombies/model-1cpu.props DESTINATION ./bin/zombies) 
 target_include_directories(${zombie_exec} PUBLIC .)
 add_dependencies(${zombie_exec} ${rhpc_lib_name} ${relogo_lib_name})
-target_link_libraries(${zombie_exec} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} ${CURL_LIBRARIES} ${MPI_LIBRARIES} ${rhpc_lib_name} ${relogo_lib_name})
+target_link_libraries(${zombie_exec} 
+	Boost::system 
+	Boost::filesystem 
+	Boost::mpi 
+	Boost::serialization 
+	${NETCDF_LIBRARIES} 
+	${CURL_LIBRARIES} 
+	MPI::MPI_CXX 
+	${rhpc_lib_name} 
+	${relogo_lib_name}
+)
 
 # environment variable `GTEST_ROOT` should be set
 find_package(GTest REQUIRED)
@@ -320,28 +427,67 @@ find_package(GTest REQUIRED)
 #target_include_directories(${core_test_exec} PUBLIC . ${GTEST_INCLUDE_DIRS})
 #add_dependencies(${core_test_exec} ${rhpc_lib_name})
 #file (COPY ../test_data/config.props ../test_data/test.properties DESTINATION .)
-#target_link_libraries(${core_test_exec} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} ${CURL_LIBRARIES} ${MPI_LIBRARIES} ${rhpc_lib_name} ${GTEST_LIBRARIES})
+#target_link_libraries(${core_test_exec} Boost::system Boost::filesystem Boost::mpi Boost::serialization ${NETCDF_LIBRARIES} ${CURL_LIBRARIES} MPI::MPI_CXX ${rhpc_lib_name} ${GTEST_LIBRARIES})
 
-set (relogo_test_exec relogo_unit_tests)
-add_executable(${relogo_test_exec} ${relogo_ut_src})
-target_include_directories(${relogo_test_exec} PUBLIC . ${GTEST_INCLUDE_DIRS})
-add_dependencies(${relogo_test_exec} ${rhpc_lib_name} ${relogo_lib_name})
-file (COPY ../test_data/config.props ../test_data/test.properties DESTINATION .)
-target_link_libraries(${relogo_test_exec} ${Boost_LIBRARIES} ${NETCDF_LIBRARIES} ${CURL_LIBRARIES} ${MPI_LIBRARIES} ${rhpc_lib_name} ${relogo_lib_name} ${GTEST_LIBRARIES})
+# set (relogo_test_exec relogo_unit_tests)
+# add_executable(${relogo_test_exec} ${relogo_ut_src})
+# target_include_directories(${relogo_test_exec} PUBLIC . ${GTEST_INCLUDE_DIRS})
+# add_dependencies(${relogo_test_exec} ${rhpc_lib_name} ${relogo_lib_name})
+# file (COPY ../test_data/config.props ../test_data/test.properties DESTINATION .)
+# target_link_libraries(${relogo_test_exec} 
+# 	Boost::system 
+# 	Boost::filesystem 
+# 	Boost::mpi 
+# 	Boost::serialization 
+# 	${NETCDF_LIBRARIES} 
+# 	${CURL_LIBRARIES} 
+# 	MPI::MPI_CXX 
+# 	${rhpc_lib_name} 
+# 	${relogo_lib_name} 
+# 	${GTEST_LIBRARIES}
+# )
+
 
 set(DEST_DIR "${CMAKE_INSTALL_PREFIX}")
 
-INSTALL(TARGETS ${rhpc_lib_name} ${relogo_lib_name}
-	DESTINATION lib)
+INSTALL(TARGETS ${rhpc_lib_name}
+	EXPORT RepastHPCTargets
+	DESTINATION lib 
+	PUBLIC_HEADER
+		DESTINATION include/repast_hpc
+)
 
-INSTALL(FILES ${rhpc_headers}
-	DESTINATION include/repast_hpc)
+INSTALL(TARGETS ${relogo_lib_name}
+	EXPORT RelogoTargets
+	DESTINATION lib 
+	PUBLIC_HEADER
+		DESTINATION include/relogo
+)
 
-INSTALL(FILES ${relogo_headers}
-	DESTINATION include/relogo)
 
 set(exec_prefix ${CMAKE_INSTALL_PREFIX})
 CONFIGURE_FILE("repast_hpc.pc.in" "repast_hpc.pc" @ONLY)
 
 INSTALL(FILES "${CMAKE_BINARY_DIR}/repast_hpc.pc"
 	        DESTINATION lib/pkgconfig)
+
+
+# include(CMakePackageConfigHelpers)
+# write_basic_package_version_file(
+# 	"RepastHPCConfigVersion.cmake"
+# 	COMPATABILITY AnyNewerVersion
+# )
+
+install(EXPORT RepastHPCTargets
+	FILE RepastHPCTargets.cmake 
+	NAMESPACE RepastHPC::
+	DESTINATION lib/cmake/RepastHPC
+)
+
+configure_file(../cmake/RepastHPCConfig.cmake.in RepastHPCConfig.cmake @ONLY)
+install(
+	FILES 
+		"${CMAKE_CURRENT_BINARY_DIR}/RepastHPCConfig.cmake"
+		# "${CMAKE_CURRENT_BINARY_DIR}/RepastHPCConfigVersion.cmake"
+	DESTINATION lib/cmake/RepastHPC
+)
