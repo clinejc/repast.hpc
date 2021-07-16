@@ -3,7 +3,6 @@ project(repast_hpc_project
 	VERSION 2.3.1
 )
 
-
 set (rhpc_lib_name repast_hpc)
 set (relogo_lib_name relogo)
 
@@ -452,7 +451,8 @@ find_package(GTest REQUIRED)
 
 set(DEST_DIR "${CMAKE_INSTALL_PREFIX}")
 
-set(repast_hpc_INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}/repast_hpc")
+set(repast_hpc_INCLUDE_DIR "${DEST_DIR}/repast_hpc")
+set(relogo_INCLUDE_DIR "${DEST_DIR}/relogo")
 
 INSTALL(TARGETS ${rhpc_lib_name}
 	EXPORT RepastHPCTargets
@@ -465,7 +465,7 @@ INSTALL(TARGETS ${relogo_lib_name}
 	EXPORT RelogoTargets
 	DESTINATION lib 
 	PUBLIC_HEADER
-		DESTINATION "${CMAKE_INSTALL_INCLUDE}/relogo"
+		DESTINATION ${relogo_INCLUDE_DIR}
 )
 
 
