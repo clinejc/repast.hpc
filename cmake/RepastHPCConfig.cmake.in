@@ -6,4 +6,6 @@ find_dependency(CURL REQUIRED)
 
 find_dependency(MPI REQUIRED)
 
+set(repast_hpc_INCLUDE_DIR @repast_hpc_INCLUDE_DIR@)
+
 include("${CMAKE_CURRENT_LIST_DIR}/RepastHPCTargets.cmake")

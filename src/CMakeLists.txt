@@ -268,6 +268,8 @@ set (relogo_ut_src
         ../test/relogo/ObserverTests.cpp
 )
 
+message("If Boost cannot be found, point CMake to your Boost installation with:")
+message("-DBOOST_ROOT=<path to Boost installation>")
 set(Boost_USE_MULTITHREADED ON)
 find_package(Boost 
 	1.61.0 
@@ -450,18 +452,20 @@ find_package(GTest REQUIRED)
 
 set(DEST_DIR "${CMAKE_INSTALL_PREFIX}")
 
+set(repast_hpc_INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}/repast_hpc")
+
 INSTALL(TARGETS ${rhpc_lib_name}
 	EXPORT RepastHPCTargets
 	DESTINATION lib 
 	PUBLIC_HEADER
-		DESTINATION include/repast_hpc
+		DESTINATION ${repast_hpc_INCLUDE_DIR}
 )
 
 INSTALL(TARGETS ${relogo_lib_name}
 	EXPORT RelogoTargets
 	DESTINATION lib 
 	PUBLIC_HEADER
-		DESTINATION include/relogo
+		DESTINATION "${CMAKE_INSTALL_INCLUDE}/relogo"
 )
 
 

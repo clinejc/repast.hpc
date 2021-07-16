@@ -108,7 +108,11 @@ endif ()
 #else()
 #  NetCDF_check_interface (CXX netcdf netcdf_c++4)
 #endif()
-NetCDF_check_interface (CXX netcdf netcdf_c++4)
+NetCDF_check_interface (CXX netcdf netcdf-cxx4)
+# if (${NETCDF_HAS_INTERFACES} STREQUAL "NO")
+#   NetCDF_check_interface (CXX netcdf netcdf_c++4)
+# endif ()
+
 NetCDF_check_interface (F77 netcdf.inc  netcdff)
 NetCDF_check_interface (F90 netcdf.mod  netcdff)
 
